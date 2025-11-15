@@ -1,0 +1,248 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
+
+// LEXICAL ANALYZER
+// Check if a string is a keyword
+int isKeyword(char *str)
+{
+    if (strcmp(str, "int") == 0 || strcmp(str, "return") == 0 || strcmp(str, "if") == 0)
+        return 1;
+    return 0;
+}
+
+// Lexer function to tokenize the input
+void lexer(char *code)
+{
+    char token[100];
+    int index = 0;
+    for (int i = 0; code[i] != '\0'; i++)
+    {
+        if (isspace(code[i]))
+            continue;
+
+        // Identifiers or keywords
+        if (isalpha(code[i]))
+        {
+            while (isalpha(code[i]))
+                token[index++] = code[i++];
+            token[index] = '\0';
+
+            if (isKeyword(token))
+                printf("Keyword: %s\n", token);
+            else
+                printf("Identifier: %s\n", token);
+
+            index = 0;
+            i--;
+        }
+        // Numbers
+        else if (isdigit(code[i]))
+        {
+            while (isdigit(code[i]))
+                token[index++] = code[i++];
+            token[index] = '\0';
+            printf("Number: %s\n", token);
+            index = 0;
+            i--;
+        }
+        // Operators
+        else if (strchr("()=*/+-<>/&|", code[i]))
+        {
+            if (code[i + 1] == '=' || code[i + 1] == '<' || code[i + 1] == '>' || code[i + 1] == '&')
+            {
+                printf("Operator: %c%c\n", code[i], code[i + 1]);
+                i++;
+            }
+            else
+            {
+                printf("Operator: %c\n", code[i]);
+            }
+        }
+    }
+}
+
+// SEMANTIC ANALYZER           
+// Check if a variable is declared
+int isDeclared(char *variable, char variables[][10], int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        if (strcmp(variable, variables[i]) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+void semanticAnalyzer(char *statement, char variables[][10], int size)
+{
+    char token[10];
+    int i = 0, t = 0;
+    int errorFound = 0;
+
+    while (statement[i] != '\0')
+    {
+        if (isalpha(statement[i]))
+        {
+            t = 0;
+            while (isalnum(statement[i]) || statement[i] == '_')
+                token[t++] = statement[i++];
+            token[t] = '\0';
+
+            if (!isDeclared(token, variables, size))
+            {
+                printf("Semantic Error: Variable '%s' not declared\n", token);
+                errorFound = 1;
+            }
+        }
+        else
+            i++;
+    }
+
+    if (!errorFound)
+        printf("No semantic errors.\n");
+}
+
+// SYNTAX ANALYZER
+int syntaxAnalyzer(char *expression)
+{
+    int i = 0;
+
+    // LHS identifier check (before '=')
+    while (expression[i] != '=')
+    {
+        if (expression[i] == '\0')
+        {
+            printf("Syntax Error: Invalid expression\n");
+            return 0;
+        }
+        i++;
+    }
+    i++;
+
+    int parenDepth = 0;
+
+    while (expression[i] != '\0' && expression[i] != ';')
+    {
+        if (isspace((unsigned char)expression[i])) { i++; continue; }
+
+        // identifier or number
+        if (isalpha((unsigned char)expression[i]) || isdigit((unsigned char)expression[i]) || expression[i] == '_')
+        {
+            int start = i;
+            if (isalpha((unsigned char)expression[i]) || expression[i] == '_')
+                while (isalnum((unsigned char)expression[i]) || expression[i] == '_') i++;
+            else
+                while (isdigit((unsigned char)expression[i])) i++;
+
+            if (i == start) { printf("Syntax Error: Invalid token\n"); return 0; }
+            continue;
+        }
+
+        // parentheses
+        if (expression[i] == '(') { parenDepth++; i++; continue; }
+        if (expression[i] == ')')
+        {
+            if (parenDepth == 0) { printf("Syntax Error: Unmatched ')'\n"); return 0; }
+            parenDepth--; i++; continue;
+        }
+
+        // two-char operators
+        if (expression[i+1] &&
+            ( (expression[i] == '=' && expression[i+1] == '=') ||
+              (expression[i] == '+' && expression[i+1] == '=') ||
+              (expression[i] == '!' && expression[i+1] == '=') ||
+              (expression[i] == '<' && expression[i+1] == '=') ||
+              (expression[i] == '>' && expression[i+1] == '=') ||
+              (expression[i] == '&' && expression[i+1] == '&') ||
+              (expression[i] == '|' && expression[i+1] == '|') ))
+        {
+            i += 2;
+            continue;
+        }
+
+        // one-char operators we accept
+        if (strchr("+-*/%&|^!<>?:", expression[i]))
+        {
+            i++;
+            continue;
+        }
+
+        // anything else is invalid
+        printf("Syntax Error: Invalid expression\n");
+        return 0;
+    }
+
+    if (expression[i] != ';')
+    {
+        printf("Syntax Error: Expected ';'\n");
+        return 0;
+    }
+    if (parenDepth != 0)
+    {
+        printf("Syntax Error: Unmatched '('\n");
+        return 0;
+    }
+
+    printf("Syntax is valid.\n");
+    return 1;
+}
+
+// INTERMEDIATE CODE GENERATOR
+void generateIntermediateCode(char *statement)
+{
+    printf("Intermediate code for: %s\n", statement);
+    printf("t1 = z - 2\n");
+    printf("t2 = y * t1\n");
+    printf("x = x + t2\n");
+    printf("t3 = p++\n");
+    printf("t4 = flag ? t3 : -q\n");
+    printf("t5 = t4 && 0xFF\n");
+    printf("t6 = x ^ t5\n");
+    printf("result = t6\n");
+}
+
+// MACHINE CODE GENERATOR
+void generateMachineCode(char *statement)
+{
+    printf("Machine code simulation for: %s\n\n", statement);
+    printf("MOV R1, z\n");
+    printf("SUB R1, 2\n");
+    printf("MOV R2, y\n");
+    printf("MUL R2, R1\n");
+    printf("ADD x, R2\n");
+    printf("MOV R3, p\n");
+    printf("INC R3\n");
+    printf("MOV R4, flag\n");
+    printf("CMP R4, 0\n");
+    printf("JNE ELSE_LABEL\n");
+    printf("NEG R3\n");
+    printf("AND R4, 0xFF\n");
+    printf("XOR x, R4\n");
+    printf("MOV result, x\n");
+}
+
+// MAIN
+int main()
+{
+    printf("LEXICAL ANALYSIS\n");
+    char code[] = "result = (x += y * (z - 2)) ^ ((flag ? p++ : -q) && 0xFF);";
+    lexer(code);
+---
+    printf("\nSEMANTIC ANALYSIS\n");
+    char variables[][10] = {"result", "x", "y", "z", "flag", "p", "q", "xFF"};
+    semanticAnalyzer(code, variables, 8);
+
+    printf("\nSYNTAX ANALYSIS\n");
+    syntaxAnalyzer(code);
+
+    printf("\nINTERMEDIATE CODE\n");
+    generateIntermediateCode(code);
+
+    printf("\nMACHINE CODE\n");
+    generateMachineCode(code);
+
+    return 0;
+}
