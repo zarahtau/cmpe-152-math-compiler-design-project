@@ -3,7 +3,7 @@
 from LexicalAnalyzer import test_lexical
 #Prompt for user inputs
 while True:
-    user_input = input("Enter a simple math problem. Example: y(variable)=4(number)+(type 'q' to exit): ").strip()
+    user_input = input("Enter a simple math problem. Example: y(variable)=4(number)+2(variable) (type 'q' to exit): ").strip()
 
     # Exit condition
     if user_input.lower() == 'q':
