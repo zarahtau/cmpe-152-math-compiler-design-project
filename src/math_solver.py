@@ -49,28 +49,35 @@ def main():
         print("\n=== Starting Compilation Steps ===")
 
         # 1. LEXICAL ANALYSIS
-        if not test_lexical(user_input):
+        token_list = test_lexical(user_input)
+        if not token_list:
             print("Lexical analysis failed.\n")
+            print("=== Compilation Failed ===")
             continue
 
         # 2. SYNTAX ANALYSIS
-        if not test_syntax(user_input):
+        ast = test_syntax(token_list)
+        if not ast:
             print("Syntax analysis failed.\n")
+            print("=== Compilation Failed ===")
             continue
 
         # 3. SEMANTIC ANALYSIS
-        if not test_semantic(user_input):
+        if not test_semantic(ast):
             print("Semantic analysis failed.\n")
+            print("=== Compilation Failed ===")
             continue
 
         # 4. INTERMEDIATE CODE GENERATION
-        if not test_intermediate(user_input):
+        if not test_intermediate(ast):
             print("Intermediate code generation failed.\n")
+            print("=== Compilation Failed ===")
             continue
 
         # 5. ASSEMBLER
-        if not test_assembler(user_input):
+        if not test_assembler(ast):
             print("Assembly generation failed.\n")
+            print("=== Compilation Failed ===")
             continue
 
         print("=== Compilation Successfully Completed ===\n")

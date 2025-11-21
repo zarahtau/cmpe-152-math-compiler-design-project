@@ -22,6 +22,7 @@ Needs to return a dict in the format:
 }
 """
 
-def test_syntax(user_input):
+def test_syntax(token_list):
     print("Testing Syntax Analyzer")
-    return True
+    
+    return {}
