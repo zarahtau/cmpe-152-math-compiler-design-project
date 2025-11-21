@@ -33,6 +33,13 @@ from IntermediateCodeGenerator import test_intermediate
 from Assembler import test_assembler
 
 def main():
+    print("\nWelcome to Math Solver where we will solve your simple math.")
+    print("Wrtie your math problem in the following format.")
+    print("(type)(identifier)=(int/double)(operation +,-,*,/)(int/double);")
+    print("Example 1: int x=1+1;")
+    print("Example 2: double y=2.0+2.0;")
+    print("The answer will be printed as x=2; y=4.0;")
+
     while True:
         user_input = input(
             "Enter a simple math expression (or type 'q' to quit): "
