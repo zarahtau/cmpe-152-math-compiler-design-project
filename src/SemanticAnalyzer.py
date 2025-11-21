@@ -15,3 +15,7 @@ The requirements for this section are
 
 The SemanticAnalyzer should flag if a user ensters int t = 4.0/2.0
 """
+
+def test_semantic(user_input):
+    print("Testing Semantic Analyzer")
+    return True

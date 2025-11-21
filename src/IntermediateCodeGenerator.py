@@ -8,3 +8,7 @@ into intermediate representation.
 After such, it is passed to the Assembler which will translate the code to
 the equivalent machine code.
 """
+
+def test_intermediate(user_input):
+    print("Testing Intermediate Code Generator")
+    return True

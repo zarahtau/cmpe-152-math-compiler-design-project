@@ -9,3 +9,7 @@ What is required
 [2] Ensuring that there are no missing semi-colons
 
 """
+
+def test_syntax(user_input):
+    print("Testing Syntax Analyzer")
+    return True

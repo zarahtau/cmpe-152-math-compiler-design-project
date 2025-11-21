@@ -17,7 +17,8 @@ If the LexicalAnalyzer is successful, the function will return true
 """
 
 
-def test_lexical():
-    print("testing lexical")
+def test_lexical(user_input):
+    print("Testing Lexical")
     
     # Return true if successful if not successful
+    return True
