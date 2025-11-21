@@ -8,12 +8,17 @@ is declared before use.
 This is different from the Syntax analyzer in that we are checking the meaning of the structure for logical correctness.
 A syntax analyzer is responsible for checking the grammatical structure of a sentence.
 
-The requirements for this section are
-[1] Type checking 
-[2] Scope Resolution
-[3] Symbol Table {created only if the first 2 pass}
+The semantic analyzer MUST receive Input from the Syntax Analyzer
 
-The SemanticAnalyzer should flag if a user ensters int t = 4.0/2.0
+Semantic Checks Include:
+[1] Variable type matches expression type
+[2] Numbers are allowed for the operation
+[3] Operator is valid for the type (+, -, *, /)
+[4] Dividing doubles and ints is allowed based on your rules
+
+Semantic Output:
+[1] True if valid
+[2] False (or an error) if invalid
 """
 
 def test_semantic(user_input):

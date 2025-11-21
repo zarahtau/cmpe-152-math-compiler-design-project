@@ -13,7 +13,19 @@ https://medium.com/@mitchhuang777/introduction-to-lexical-analysis-what-it-is-an
 The requirements for our LexicalAnalyzer is one that parses the input string
 from the user and classifies the each of the tokens in the user input
 
-If the LexicalAnalyzer is successful, the function will return true
+Lexical Input: Raw string typed by the user:
+Lexical Return: A python list of tokens which is to be passed to the sytax analyzer
+
+Print and RETURN if pass:
+[
+    ("TYPE", "int"),
+    ("IDENT", "y"),
+    ("ASSIGN", "="),
+    ("NUMBER", "4"),
+    ("OP", "+"),
+    ("NUMBER", "3"),
+    ("SEMICOLON", ";")
+]
 """
 
 
