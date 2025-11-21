@@ -32,5 +32,4 @@ Print and RETURN if pass:
 def test_lexical(user_input):
     print("Testing Lexical")
     
-    # Return true if successful if not successful
     return []
