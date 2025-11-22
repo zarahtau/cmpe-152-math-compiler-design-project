@@ -43,9 +43,12 @@ def test_syntax(token_list):
 # On failure: prints an error and returns {}
 
 from typing import List, Tuple, Dict, Any
+import re
 
 _NUM_KINDS = {"NUMBER", "INT", "FLOAT"}   # support either style from your lexer
+_EXPECTED_SEQUENCE = ["TYPE", "IDENT", "ASSIGN", "NUMBER", "OP", "NUMBER", "SEMICOLON"]
 _EXPECTED_KINDS = ["TYPE", "IDENT", "ASSIGN", "NUM", "OP", "NUM", "SEMICOLON"]
+_VALID_TYPES = {"int", "double"}
 _VALID_OPS = {"+", "-", "*", "/"}
 
 def _err(msg: str):
@@ -61,11 +64,64 @@ def _to_number(lexeme: str):
         # Should not happen if lexer was correct, but guard anyway
         return None
 
+# Validate exact token sequence and count
+def validate_token_sequence(tokens):
+      # Validate exact token sequence and count
+    kinds_only = [k for k, _ in tokens]
+    if kinds_only != _EXPECTED_SEQUENCE:
+        _err(
+            "invalid token sequence. Expected: "
+            + " ".join(_EXPECTED_SEQUENCE)
+            + f"  |  Found: {' '.join(kinds_only) if kinds_only else '<none>'}"
+        )
+        return [] 
+    
+def validate_types(tokens):
+    # Make sure there are enough tokens before indexing
+    if len(tokens) < 7:
+        _err("too few tokens to validate types.")
+        return False
+
+    type_lex = tokens[0][1]
+    ident_lex = tokens[1][1]
+    num1_lex  = tokens[3][1]
+    op_lex    = tokens[4][1]
+    num2_lex  = tokens[5][1]
+    semi_lex  = tokens[6][1]
+
+    if type_lex not in _VALID_TYPES:
+        _err(f"unknown type {type_lex!r}")
+        return False
+    if not re.fullmatch(r"[A-Za-z]+", ident_lex):
+        _err("identifier must be alphabetic only")
+        return False
+    if op_lex not in _VALID_OPS:
+        _err(f"invalid operator {op_lex!r}")
+        return False
+    try:
+        float(num1_lex)
+        float(num2_lex)
+    except ValueError:
+        _err("number literal not valid")
+        return False
+    if semi_lex != ";":
+        _err("statement must end with ';'")
+        return False
+
+    return True
+
 def test_syntax(token_list: List[Tuple[str, str]]) -> Dict[str, Any]:
     print("[SYNTAX ANALYSIS]")
 
     if not token_list:
         _err("no tokens provided.")
+        return {}
+    
+    # Validate token sequence
+    validate_token_sequence(token_list)
+    validate_types(token_list)
+    
+    if not validate_types:
         return {}
 
     # Must be exactly seven tokens: TYPE IDENT ASSIGN NUM OP NUM SEMICOLON
@@ -127,3 +183,110 @@ def test_syntax(token_list: List[Tuple[str, str]]) -> Dict[str, Any]:
     print(ast)
     print()
     return ast
+
+# ----------------------------------------------------------------------
+# Test Suite for Syntax Analyzer
+# ----------------------------------------------------------------------
+
+def test_syntax_suite():
+    print("\n===== Running Syntax Analyzer Test Suite =====\n")
+
+    tests = [
+        # Valid cases
+        {
+            "name": "Basic int addition",
+            "input": [
+                ("TYPE", "int"),
+                ("IDENT", "y"),
+                ("ASSIGN", "="),
+                ("NUMBER", "4"),
+                ("OP", "+"),
+                ("NUMBER", "3"),
+                ("SEMICOLON", ";")
+            ],
+            "expected": {
+                "type": "int",
+                "identifier": "y",
+                "expression": {"op": "+", "left": 4, "right": 3}
+            }
+        },
+        {
+            "name": "Valid double multiplication",
+            "input": [
+                ("TYPE", "double"),
+                ("IDENT", "area"),
+                ("ASSIGN", "="),
+                ("NUMBER", "3.5"),
+                ("OP", "*"),
+                ("NUMBER", "2"),
+                ("SEMICOLON", ";")
+            ],
+            "expected": {
+                "type": "double",
+                "identifier": "area",
+                "expression": {"op": "*", "left": 3.5, "right": 2}
+            }
+        },
+
+        # Invalid cases
+        {
+            "name": "Missing semicolon",
+            "input": [
+                ("TYPE", "int"),
+                ("IDENT", "x"),
+                ("ASSIGN", "="),
+                ("NUMBER", "5"),
+                ("OP", "+"),
+                ("NUMBER", "2"),
+            ],
+            "expected": {}  # should fail
+        },
+        {
+            "name": "Invalid operator",
+            "input": [
+                ("TYPE", "int"),
+                ("IDENT", "z"),
+                ("ASSIGN", "="),
+                ("NUMBER", "10"),
+                ("OP", "%"),  # not allowed
+                ("NUMBER", "3"),
+                ("SEMICOLON", ";")
+            ],
+            "expected": {}  # should fail
+        },
+        {
+            "name": "Unknown type",
+            "input": [
+                ("TYPE", "float"),  # invalid type for this grammar
+                ("IDENT", "w"),
+                ("ASSIGN", "="),
+                ("NUMBER", "9"),
+                ("OP", "-"),
+                ("NUMBER", "2"),
+                ("SEMICOLON", ";")
+            ],
+            "expected": {}  # should fail
+        },
+    ]
+
+    passed = 0
+    for case in tests:
+        print(f"--- {case['name']} ---")
+        result = test_syntax(case["input"])
+        expected = case["expected"]
+        if result == expected:
+            print("PASS\n")
+            passed += 1
+        else:
+            print("FAIL")
+            print("Expected:", expected)
+            print("Got:", result, "\n")
+
+    print(f"Summary: {passed}/{len(tests)} tests passed.\n")
+
+
+# ----------------------------------------------------------------------
+# Run the suite if executed directly
+# ----------------------------------------------------------------------
+if __name__ == "__main__":
+    test_syntax_suite()
