@@ -1,21 +1,123 @@
 """
- ===== Assembler.py =====
+===== Assembler.py =====
 
-The assembler is used to map the user input and map data to the equivalent assembly
+The Assembler is responsible for converting the intermediate code
+into low-level assembly instructions.
 
-This is different from the Syntax analyzer in that we are checking the meaning of the structure for logical correctness.
-A syntax analyzer is responsible for checking the grammatical structure of a sentence.
-
-The requirements for this section are
-[1] Type checking 
-[2] Scope Resolution
-[3] Symbol Table {created only if the first 2 pass}
-
-The SemanticAnalyzer should flag if a user ensters int t = 4.0/2.0
+For integer operations → LD, ADD, ST
+For double (float) operations → LDF, ADDF, STF
 """
 
-def test_assembler(user_input):
-    print("Testing Assembler")
-    
-    # Return true if successful if not successful
-    return True
+from typing import Dict, Any, List
+
+# ----------------------------------------------------------------------
+# Register Management
+# ----------------------------------------------------------------------
+_register_counter = 1
+
+def _new_reg() -> str:
+    """Generate a new register name."""
+    global _register_counter
+    reg = f"R{_register_counter}"
+    _register_counter += 1
+    return reg
+
+# ----------------------------------------------------------------------
+# Operation mapping by type
+# ----------------------------------------------------------------------
+_OP_MAP = {
+    "int": {"load": "LD", "store": "ST", "add": "ADD", "sub": "SUB", "mul": "MUL", "div": "DIV"},
+    "double": {"load": "LDF", "store": "STF", "add": "ADDF", "sub": "SUBF", "mul": "MULF", "div": "DIVF"}
+}
+
+# ----------------------------------------------------------------------
+# Assembly code generation
+# ----------------------------------------------------------------------
+def test_assembler(ast: Dict[str, Any]) -> List[str]:
+    """
+    Generate assembly code from AST.
+    Handles integer vs double load/store instructions.
+    """
+    print("[ASSEMBLER]")
+
+    if not ast or "expression" not in ast:
+        print("Assembly error: invalid AST.")
+        return []
+
+    var_type = ast.get("type", "int")
+    op = ast["expression"]["op"]
+    left = ast["expression"]["left"]
+    right = ast["expression"]["right"]
+    identifier = ast["identifier"]
+
+    ops = _OP_MAP[var_type]
+    reg = _new_reg()
+
+    # Generate pseudo-assembly
+    code = [
+        f"{ops['load']} {reg}, {left}",
+        f"{ops[op_to_mnemonic(op)]} {reg}, {right}",
+        f"{ops['store']} {identifier}, {reg}"
+    ]
+
+    for line in code:
+        print(line)
+    print()
+    return code
+
+def op_to_mnemonic(op: str) -> str:
+    """Map arithmetic symbol to mnemonic keyword."""
+    return {
+        "+": "add",
+        "-": "sub",
+        "*": "mul",
+        "/": "div"
+    }[op]
+
+# ----------------------------------------------------------------------
+# Test Suite
+# ----------------------------------------------------------------------
+def test_assembler_suite():
+    print("===== Running Assembler Test Suite =====\n")
+
+    tests = [
+        {
+            "name": "Integer addition",
+            "input": {
+                "type": "int",
+                "identifier": "y",
+                "expression": {"op": "+", "left": 4, "right": 3}
+            },
+            "expected": ["LD R1, 4", "ADD R1, 3", "ST y, R1"]
+        },
+        {
+            "name": "Double multiplication",
+            "input": {
+                "type": "double",
+                "identifier": "area",
+                "expression": {"op": "*", "left": 2.5, "right": 5.0}
+            },
+            "expected": ["LDF R2, 2.5", "MULF R2, 5.0", "STF area, R2"]
+        }
+    ]
+
+    passed = 0
+    for case in tests:
+        print(f"--- {case['name']} ---")
+        result = generate_assembly(case["input"])
+        if result == case["expected"]:
+            print("✅ PASS\n")
+            passed += 1
+        else:
+            print("❌ FAIL")
+            print("Expected:", case["expected"])
+            print("Got:", result, "\n")
+
+    print(f"Summary: {passed}/{len(tests)} tests passed.\n")
+
+
+# ----------------------------------------------------------------------
+# Run suite if executed directly
+# ----------------------------------------------------------------------
+if __name__ == "__main__":
+    test_assembler_suite()

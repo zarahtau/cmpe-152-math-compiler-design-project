@@ -34,7 +34,7 @@ import re
 # ----------------------------------------------------------------------
 _TOKEN_SPEC = [
     ("TYPE",      r"\b(?:int|double)\b"),   # Specific keywords must come first
-    ("IDENT",     r"[A-Za-z]+"),            # Variable names (alphabetic only)
+    ("IDENT",     r"[A-Za-z][A-Za-z0-9]*"),            # Variable names (alphabetic only)
     ("NUMBER",    r"(?:\d+\.\d+|\d+)"),     # Integer or float literals
     ("ASSIGN",    r"="),                    # Assignment operator
     ("OP",        r"[+\-*/]"),              # Arithmetic operators
