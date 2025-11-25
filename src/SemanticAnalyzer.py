@@ -25,128 +25,139 @@ Semantic Output:
     print("Testing Semantic Analyzer")
     return True
 """
+# ===== SemanticAnalyzer.py =====
+"""
+SemanticAnalyzer is used to check the validity of the user input. After
+syntax/lexical analysis, this code is used for type checking and making sure
+the expression is logically correct.
 
-# SemanticAnalyzer checks meaning-level correctness:
-# [1] Variable type matches expression type
-# [2] Operands are numbers (for now, per your AST)
-# [3] Operator is valid (+, -, *, /)
-# [4] Division rules, including divide-by-zero
-#
-# Input: AST dict from SyntaxAnalyzer:
-# {
-#   "type": "int"|"double",
-#   "identifier": "y",
-#   "expression": {"op": "+|-|*|/", "left": <num>, "right": <num>}
-# }
-#
-# Output: True (valid) or False (invalid)
-#
-# Notes:
-# - Maintains a simple symbol table to support "declared before use" as you expand.
-# - Current grammar uses numeric literals only; identifiers in expressions can be added later.
+Input AST format (from SyntaxAnalyzer):
+
+{
+    "type": "int" or "double",
+    "identifier": "y",
+    "expression": {
+        "op": "+",       # one of +, -, *, /
+        "left": 4,       # Python int or float literal
+        "right": 3       # Python int or float literal
+    }
+}
+
+Semantic checks:
+[1] Variable type matches expression type (NO implicit promotion)
+[2] Numbers are allowed for the operation
+[3] Operator is valid (+, -, *, /)
+[4] No mixed-type expressions: int op int OR double op double only
+[5] Division by zero is forbidden
+
+Output:
+- True if valid
+- False if invalid
+"""
 
 from typing import Dict, Any
 
-# Global symbol table: var_name -> {"type": "int"|"double"}
-_SYMTAB: Dict[str, Dict[str, str]] = {}
+_SYMBOL_TABLE: Dict[str, Dict[str, str]] = {}
 
-_VALID_TYPES = {"int", "double"}
-_VALID_OPS = {"+", "-", "*", "/"}
+VALID_TYPES = {"int", "double"}
+VALID_OPS = {"+", "-", "*", "/"}
+
 
 def _err(msg: str) -> None:
     print(f"Semantic error: {msg}")
 
-def _infer_number_type(n) -> str:
-    """
-    Infer 'int' or 'double' from a Python numeric literal in the AST.
-    """
-    if isinstance(n, int):
+
+def _infer_literal_type(value) -> str:
+    """Infer 'int' or 'double' from a Python literal."""
+    if isinstance(value, int):
         return "int"
-    if isinstance(n, float):
+    if isinstance(value, float):
         return "double"
-    # If you later allow identifiers, handle them here.
     return "unknown"
 
-def _result_type(lhs_type: str, rhs_type: str, op: str) -> str:
-    """
-    Simple arithmetic promotion rules:
-    - If either operand is double -> result is double
-    - Else result is int
-    - Division with two ints stays int (C-style integer division) for this project
-      to match examples like: int z = 3 * 4; and allow int y = 4 / 2;
-    """
-    if lhs_type == "double" or rhs_type == "double":
-        return "double"
-    # both int
-    return "int"
 
-def test_semantic(ast: Dict[str, Any], symtab: Dict[str, Dict[str, str]] = None) -> bool:
+def test_semantic(ast: Dict[str, Any]) -> bool:
     print("[SEMANTIC ANALYSIS]")
 
-    # Use provided symtab or module-global one
-    table = symtab if symtab is not None else _SYMTAB
-
-    # Basic AST shape checks
-    if not isinstance(ast, dict) or "type" not in ast or "identifier" not in ast or "expression" not in ast:
-        _err("invalid AST shape.")
+    # Basic AST sanity
+    if not isinstance(ast, dict):
+        _err("AST is not a dictionary.")
         return False
 
-    declared_type = ast["type"]
+    if "type" not in ast or "identifier" not in ast or "expression" not in ast:
+        _err("AST missing required fields (type / identifier / expression).")
+        return False
+
+    declared_type = ast["type"]          # 'int' or 'double'
     var_name = ast["identifier"]
     expr = ast["expression"]
 
-    if declared_type not in _VALID_TYPES:
-        _err(f"unknown type '{declared_type}'.")
+    if declared_type not in VALID_TYPES:
+        _err(f"unknown declared type '{declared_type}'.")
         return False
+
     if not isinstance(var_name, str) or not var_name:
-        _err("invalid identifier.")
+        _err("invalid identifier name.")
         return False
-    if not isinstance(expr, dict) or not {"op", "left", "right"} <= set(expr.keys()):
-        _err("invalid expression node.")
+
+    # Expression structure
+    if not isinstance(expr, dict) or not {"op", "left", "right"} <= expr.keys():
+        _err("invalid expression node in AST.")
         return False
 
     op = expr["op"]
-    left = expr["left"]
-    right = expr["right"]
+    left_val = expr["left"]
+    right_val = expr["right"]
 
     # [3] Operator validity
-    if op not in _VALID_OPS:
+    if op not in VALID_OPS:
         _err(f"operator '{op}' is not supported.")
         return False
 
-    # [2] Numbers are allowed for the operation (current grammar uses numeric literals)
-    if not isinstance(left, (int, float)) or not isinstance(right, (int, float)):
-        _err("operands must be numeric literals for this grammar.")
+    # [2] Numbers must be allowed (only numeric literals for now)
+    if not isinstance(left_val, (int, float)):
+        _err("left operand must be a numeric literal.")
         return False
 
-    # Division by zero check (for both int and double)
-    if op == "/" and float(right) == 0.0:
+    if not isinstance(right_val, (int, float)):
+        _err("right operand must be a numeric literal.")
+        return False
+
+    # [5] Division by zero
+    if op == "/" and float(right_val) == 0.0:
         _err("division by zero.")
         return False
 
     # Infer operand types
-    lt = _infer_number_type(left)
-    rt = _infer_number_type(right)
-    if lt == "unknown" or rt == "unknown":
-        _err("unable to infer operand type.")
+    left_type = _infer_literal_type(left_val)
+    right_type = _infer_literal_type(right_val)
+
+    if left_type == "unknown" or right_type == "unknown":
+        _err("unable to infer operand types.")
         return False
 
-    # Compute expression type
-    expr_type = _result_type(lt, rt, op)
-
-    # [4] Division rules:
-    # - int / int is allowed; result considered 'int' in this project
-    # - mixing int and double promotes to 'double' (already handled above)
-    # (Already enforced via _result_type and checks below.)
-
-    # [1] Variable type must match expression type
-    if declared_type == "int" and expr_type == "double":
-        _err("cannot assign a double expression to an int variable.")
+    # [4] No mixed-type expressions
+    if left_type != right_type:
+        _err(
+            f"mixed-type expression is not allowed: left is '{left_type}' "
+            f"but right is '{right_type}'. Must use all int or all double expressions."
+        )
         return False
 
-    # If we reach here, semantics are valid. "Declare" the variable.
-    table[var_name] = {"type": declared_type}
+    # Expression type is the common operand type
+    expr_type = left_type
 
-    print("Types valid and semantics OK.")
+    # [1] Variable type must match expression type exactly
+    if declared_type != expr_type:
+        _err(
+            f"mixed-type expression is not allowed: variable is '{declared_type}' but expression is '{expr_type}'. "
+            "Only int→int and double→double assignments are allowed."
+        )
+        return False
+
+    # If we reach here, semantics are valid; record variable type
+    _SYMBOL_TABLE[var_name] = {"type": declared_type}
+
+    print("Semantics valid.")
     print()
     return True

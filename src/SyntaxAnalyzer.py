@@ -92,8 +92,8 @@ def validate_types(tokens):
     if type_lex not in _VALID_TYPES:
         _err(f"unknown type {type_lex!r}")
         return False
-    if not re.fullmatch(r"[A-Za-z]+", ident_lex):
-        _err("identifier must be alphabetic only")
+    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9]*", ident_lex):
+        _err("identifier must be alphanumeric starting with alpha character only")
         return False
     if op_lex not in _VALID_OPS:
         _err(f"invalid operator {op_lex!r}")
