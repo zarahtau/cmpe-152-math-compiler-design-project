@@ -45,7 +45,7 @@ def test_syntax(token_list):
 from typing import List, Tuple, Dict, Any
 import re
 
-_NUM_KINDS = {"NUMBER", "INT", "FLOAT"}   # support either style from your lexer
+_NUM_KINDS = {"NUMBER", "INT", "FLOAT"}   # support either style from the lexer
 _EXPECTED_SEQUENCE = ["TYPE", "IDENT", "ASSIGN", "NUMBER", "OP", "NUMBER", "SEMICOLON"]
 _EXPECTED_KINDS = ["TYPE", "IDENT", "ASSIGN", "NUM", "OP", "NUM", "SEMICOLON"]
 _VALID_TYPES = {"int", "double"}

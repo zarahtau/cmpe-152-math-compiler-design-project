@@ -6,6 +6,9 @@ into low-level assembly instructions.
 
 For integer operations → LD, ADD, ST
 For double (float) operations → LDF, ADDF, STF
+
+Print answer after calculation as example below
+Answer: y=1;
 """
 
 from typing import Dict, Any, List
@@ -194,10 +197,10 @@ def test_assembler_suite():
        print(f"--- {case['name']} ---")
        result = test_assembler(case["input"])
        if result == case["expected"]:
-           print("✅ PASS\n")
+           print("PASS\n")
            passed += 1
        else:
-           print("❌ FAIL")
+           print("FAIL")
            print("Expected:", case["expected"])
            print("Got:", result, "\n")
 
